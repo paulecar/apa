@@ -4,3 +4,5 @@ app/__pycache__/
 venv/
 *.xlsx
 *.pdf
+*.png
+uploads/
