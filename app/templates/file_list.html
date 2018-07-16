@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+
+    <h2>Your Files in {{ currdir }}</h2> </br>
+    {% for file in files: %}
+        <A HREF="{{ directory }}{{ file }}">{{ file }}</A> </br></br>
+    {% endfor %}
+
+{% endblock %}

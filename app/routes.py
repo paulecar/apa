@@ -52,3 +52,10 @@ def uploader():
         f.save(os.path.join(app.config['UPLOAD_FOLDER'], session.get('ID'), filename))
         flash('file uploaded successfully')
         return redirect(url_for('index'))
+
+@app.route('/files', methods=['GET'])
+
+def files():
+    f_list = os.listdir(os.path.join(app.config['UPLOAD_FOLDER'], session.get('ID')))
+
+    return render_template('file_list.html',files=f_list,currdir=app.config['UPLOAD_FOLDER'] + "/" + session.get('ID'))
