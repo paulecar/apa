@@ -5,7 +5,11 @@
 
     <h2>Your Files in {{ currdir }}</h2> </br>
     {% for file in files: %}
-        <A HREF="{{ directory }}{{ file }}">{{ file }}</A> </br></br>
+        {% if file.rsplit('.', 1)[1]=='pdf' %}
+            <A href="{{ url_for('convert', filename=file) }}">{{ file }}</A> </br></br>
+        {% else %}
+            <A href="{{ url_for('scanpng', filename=file) }}">{{ file }}</A> </br></br>
+        {% endif %}
     {% endfor %}
 
 {% endblock %}

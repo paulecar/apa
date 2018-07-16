@@ -1,6 +1,35 @@
 {% extends "base.html" %}
 
 {% block app_content %}
-<h1 class="text-muted" align="center"> APA Utils<br>{{season}}</h1>
+<h1 class="text-muted" align="center"> APA Utils<br></h1>
+<h2  class="text-muted" align="center"> Scanned Rosters </h2>
+<div class="table-responsive">
+    <table title="Teams" class="table">
+        <tr>
+            <th colspan="4" align="center">{{homename}}</th>
+            <th colspan="4" align="center">{{awayname}}</th>
+        </tr>
+        <th>APA #</th>
+        <th>SL</th>
+        <th>MP</th>
+        <th>Name</th>
+        <th>APA #</th>
+        <th>SL</th>
+        <th>MP</th>
+        <th>Name</th>
+        {% for player in teams %}
+            <tr>
+                <td>{{player[2]}}</td>
+                <td>{{player[0]}}</td>
+                <td>{{player[1]}}</td>
+                <td>{{player[3]}} {{player[4]}}</td>
+                <td>{{player[7]}}</td>
+                <td>{{player[5]}}</td>
+                <td>{{player[6]}}</td>
+                <td>{{player[8]}} {{player[9]}}</td>
+            </tr>
+        {% endfor %}
+    </table>
+</div>
 
 {% endblock %}
