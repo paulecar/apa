@@ -52,29 +52,30 @@ def index():
     if session.get('scan_result'):
         flash('Using existing scan result ' + session.get('ID'))
         lines = session.get('scan_result').splitlines()
+        print("Raw text:", lines)
         teams = scantools.findTeams(lines)
         homeTeamName = teams[0]
         awayTeamName = teams[1]
 
         players = scantools.findPlayers(lines)
-        # for player in players:
-        #    print("player :", player)
+        for player in players:
+            print("player :", player)
 
         fixedPlayers = scantools.fixNames(players)
-        # for fplayer in fixedPlayers:
-        #    print("fplayer: ", fplayer)
+        for fplayer in fixedPlayers:
+            print("fplayer: ", fplayer)
 
         # invertedPlayers = invertPlayers(fixedPlayers)
         # print(invertedPlayers)
         hometeam = scantools.createRoster(fixedPlayers, 0, 1, 2, 3, 4)
-        # print(homeTeamName)
-        # for p in hometeam.items():
-        #    print("hometeam :", p)
+        print(homeTeamName)
+        for p in hometeam.items():
+            print("hometeam :", p)
 
         awayteam = scantools.createRoster(fixedPlayers, 5, 6, 7, 8, 9)
-        # print(awayTeamName)
-        # for p in awayteam.items():
-        #    print("awayteam: ", p)
+        print(awayTeamName)
+        for p in awayteam.items():
+            print("awayteam: ", p)
 
     return render_template('index.html', title='Home', teams=fixedPlayers, hometeam=hometeam, awayteam=awayteam, homename=homeTeamName, awayname=awayTeamName)
 
@@ -110,6 +111,7 @@ def uploader():
 @app.route('/files', methods=['GET'])
 def files():
     f_list = os.listdir(os.path.join(app.config['UPLOAD_FOLDER'], session.get('ID')))
+    f_list.sort()
     return render_template('file_list.html',files=f_list,currdir=app.config['UPLOAD_FOLDER'] + "/" + session.get('ID'))
 
 
@@ -139,5 +141,26 @@ def scanpng(filename):
     flash(result)
 
     session['scan_result'] = result
+    session['current_form'] = filename.rsplit('.', 1)[0]
+
+    newname = os.path.join(app.config['UPLOAD_FOLDER'], session.get('ID'), filename.rsplit('.', 1)[0] + '.txt')
+    print("newname:", newname)
+
+    with open(newname, 'w') as f:
+        f.write(result)
+
+    return redirect(url_for('index'))
+
+
+@app.route('/loadtxt/<filename>', methods=['GET'])
+def loadtxt(filename):
+    file = os.path.join(app.config['UPLOAD_FOLDER'], session.get('ID'), filename)
+    print(file)
+
+    with open(file, 'r') as f:
+        result = f.read()
+
+    session['scan_result'] = result
+    session['current_form'] = filename.rsplit('.', 1)[0]
 
     return redirect(url_for('index'))
