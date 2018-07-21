@@ -28,17 +28,17 @@ def scan(title, image):
         api.Recognize()
         _ocrResult = api.GetUTF8Text()
         _conf = api.MeanTextConf()
-        print (title, _ocrResult)
+        # print (title, _ocrResult)
         return _ocrResult
 
 
 def findTeams(lines):
     for idx, line in enumerate(lines):
-        print("line", idx, line)
-        if "Home Team" in line:
-            print("might work:", idx)
+        # print("line", idx, line)
+        # if "Home Team" in line:
+        #     print("might work:", idx)
         if "Team:" in line:
-            print("Found Teams:", type(line), idx, line)
+        #     print("Found Teams:", type(line), idx, line)
             break
     splitline = line.split("Team:")
     teams = [t.strip() for t in splitline]
@@ -53,7 +53,7 @@ def findPlayers(lines):
         if "SL MP" in line:
             start = idx
             stop = idx + 9
-            print("Found Players:", idx, start, stop, line)
+            # print("Found Players:", idx, start, stop, line)
         if idx==stop:
             break
         if idx > start:
@@ -84,20 +84,20 @@ def splitNames(p):
 def fixNames(players):
     cleanPlayers = []
     for pair in players:
-        print(len(pair), pair)
+        # print(len(pair), pair)
         pair = [i for i in pair if i not in ('', '.')]
         pair_pattern = listCheck(pair)
-        print("Pattern:", pair_pattern)
+        # print("Pattern:", pair_pattern)
         if pair_pattern == pattern[1]:
-            print("fixin trouble 1:", pair_pattern, pair)
+            # print("fixin trouble 1:", pair_pattern, pair)
             pair[3] = ''.join((pair[3] + " " + pair[4]))
             del pair[4]
         elif pair_pattern == pattern[2]:
-            print("fixin trouble 2:", pair_pattern, pair)
+            # print("fixin trouble 2:", pair_pattern, pair)
             pair[8] = ''.join((pair[8] + " " + pair[9]))
             del pair[9]
         elif pair_pattern == pattern[3]:
-            print("fixin trouble 3:", pair_pattern, pair)
+            # print("fixin trouble 3:", pair_pattern, pair)
             pair[3] = ''.join((pair[3] + " " + pair[4]))
             pair[8] = ''.join((pair[8] + " " + pair[9]))
             del pair[4]
@@ -105,13 +105,13 @@ def fixNames(players):
         elif pair_pattern == pattern[4] or \
              pair_pattern == pattern[5] or \
              pair_pattern == pattern[6]:
-            print("fixin trouble 456:", pair_pattern, pair)
+            # print("fixin trouble 456:", pair_pattern, pair)
             pair = splitNames(pair)
 
         cleanpair = [col.rstrip(',') for col in pair]
         extraClean = [i for i in cleanpair if i not in ('', '.')]
-        if listCheck(cleanpair) != pattern[0]:
-            print("Trouble with cleaning pair:", pair)
+        # if listCheck(cleanpair) != pattern[0]:
+        #     print("Trouble with cleaning pair:", pair)
         cleanPlayers.append(extraClean)
     return cleanPlayers
 
@@ -119,7 +119,7 @@ def fixNames(players):
 def createRoster(teamlists, sl, mp, id, last, first):
     roster = {}
     for row in teamlists:
-        print("Row:", row)
+        # print("Row:", row)
         # format of each entry[apaId]: (skill, match, last, first )
         try:
             roster[row[id]] = (row[sl], row[mp], row[first], row[last])

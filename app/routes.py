@@ -48,34 +48,34 @@ def index():
     awayteam = ()
     homeTeamName = ""
     awayTeamName = ""
+    fixedPlayers = []
 
     if session.get('scan_result'):
         flash('Using existing scan result ' + session.get('ID'))
         lines = session.get('scan_result').splitlines()
-        print("Raw text:", lines)
         teams = scantools.findTeams(lines)
         homeTeamName = teams[0]
         awayTeamName = teams[1]
 
         players = scantools.findPlayers(lines)
-        for player in players:
-            print("player :", player)
+        # for player in players:
+        #     print("player :", player)
 
         fixedPlayers = scantools.fixNames(players)
-        for fplayer in fixedPlayers:
-            print("fplayer: ", fplayer)
+        # for fplayer in fixedPlayers:
+        #     print("fplayer: ", fplayer)
 
         # invertedPlayers = invertPlayers(fixedPlayers)
         # print(invertedPlayers)
         hometeam = scantools.createRoster(fixedPlayers, 0, 1, 2, 3, 4)
-        print(homeTeamName)
-        for p in hometeam.items():
-            print("hometeam :", p)
+        # print(homeTeamName)
+        # for p in hometeam.items():
+        #     print("hometeam :", p)
 
         awayteam = scantools.createRoster(fixedPlayers, 5, 6, 7, 8, 9)
-        print(awayTeamName)
-        for p in awayteam.items():
-            print("awayteam: ", p)
+        # print(awayTeamName)
+        # for p in awayteam.items():
+        #     print("awayteam: ", p)
 
     return render_template('index.html', title='Home', teams=fixedPlayers, hometeam=hometeam, awayteam=awayteam, homename=homeTeamName, awayname=awayTeamName)
 
@@ -112,7 +112,17 @@ def uploader():
 def files():
     f_list = os.listdir(os.path.join(app.config['UPLOAD_FOLDER'], session.get('ID')))
     f_list.sort()
-    return render_template('file_list.html',files=f_list,currdir=app.config['UPLOAD_FOLDER'] + "/" + session.get('ID'))
+    f_dict={}
+
+    # Priminng the keys
+    for f in f_list:
+        f_dict[f.rsplit('.', 1)[0]]={}
+
+    # Loading the available files per key
+    for f in f_list:
+        f_dict[f.rsplit('.', 1)[0]][f.rsplit('.', 1)[1]] = f
+
+    return render_template('file_list.html', files=f_dict, currdir=app.config['UPLOAD_FOLDER'] + "/" + session.get('ID'))
 
 
 @app.route('/convert/<filename>', methods=['GET'])
@@ -125,26 +135,21 @@ def convert(filename):
     pdf2png(convert_file, "-r300", png_file)
     print("Conv End: ", time.strftime('%X %x %Z'))
 
-    f_list = os.listdir(os.path.join(app.config['UPLOAD_FOLDER'], session.get('ID')))
-    return render_template('file_list.html',files=f_list,currdir=app.config['UPLOAD_FOLDER'] + "/" + session.get('ID'))
+    return redirect(url_for('files'))
 
 
 @app.route('/scanpng/<filename>', methods=['GET'])
 def scanpng(filename):
     scan_file = os.path.join(app.config['UPLOAD_FOLDER'], session.get('ID'), filename)
 
-    print("Scan Start: ", time.strftime('%X %x %Z'))
+    # print("Scan Start: ", time.strftime('%X %x %Z'))
     result = scantools.scan(filename, Image.open(scan_file))
-    print("Scan End: ", time.strftime('%X %x %Z'))
-
-    flash('Scanners:')
-    flash(result)
+    # print("Scan End: ", time.strftime('%X %x %Z'))
 
     session['scan_result'] = result
     session['current_form'] = filename.rsplit('.', 1)[0]
 
     newname = os.path.join(app.config['UPLOAD_FOLDER'], session.get('ID'), filename.rsplit('.', 1)[0] + '.txt')
-    print("newname:", newname)
 
     with open(newname, 'w') as f:
         f.write(result)
@@ -155,7 +160,6 @@ def scanpng(filename):
 @app.route('/loadtxt/<filename>', methods=['GET'])
 def loadtxt(filename):
     file = os.path.join(app.config['UPLOAD_FOLDER'], session.get('ID'), filename)
-    print(file)
 
     with open(file, 'r') as f:
         result = f.read()

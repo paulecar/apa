@@ -4,14 +4,33 @@
 {% block app_content %}
 
     <h2>Your Files in {{ currdir }}</h2> </br>
-    {% for file in files: %}
-        {% if file.rsplit('.', 1)[1]=='pdf' %}
-            <A href="{{ url_for('convert', filename=file) }}">{{ file }}</A> </br></br>
-        {% elif file.rsplit('.', 1)[1]=='txt' %}
-            <A href="{{ url_for('loadtxt', filename=file) }}">{{ file }}</A> </br></br>
-        {% else %}
-            <A href="{{ url_for('scanpng', filename=file) }}">{{ file }}</A> </br></br>
-        {% endif %}
-    {% endfor %}
+
+    <div class="table-responsive">
+        <table title="Files" class="table">
+            <th>File Set ID</th>
+            <th>Convert PDF</th>
+            <th>Scan Image File</th>
+            <th>Scan Result</th>
+            <th>Meta</th>
+            {% for entry, files in files.items() %}
+                <tr>
+                    <td>{{entry}}</td>
+                    <td><a title="Convert this file to image" href="{{ url_for('convert', filename=files['pdf']) }}">PDF</a></td>
+                    {% if 'png' in files.keys() %}
+                        <td><a title="Scan this file to text" href="{{ url_for('scanpng', filename=files['png']) }}">PNG</a></td>
+                    {% else %}
+                        <td>No Image</td>
+                    {% endif %}
+                    {% if 'txt' in files.keys() %}
+                        <td><a title="Select this scan result" href="{{ url_for('loadtxt', filename=files['txt']) }}">Result</a></td>
+                    {% else %}
+                        <td>No Scan Result</td>
+                    {% endif %}
+                    <td>Unavailable</td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+
 
 {% endblock %}
