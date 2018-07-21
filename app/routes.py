@@ -1,7 +1,7 @@
 from app import app
 from app.forms import UploadForm
 from werkzeug.utils import secure_filename
-from flask import render_template, flash, redirect, url_for, request, session
+from flask import render_template, flash, redirect, url_for, request, session, make_response
 from PIL import Image
 
 
@@ -38,46 +38,61 @@ def pdf2png(pdf_input_path, dpi, output_path):
 @app.route('/')
 @app.route('/index')
 def index():
-    if session.get('ID'):
-        flash('Using existing cookie ' + session.get('ID'))
-    else:
-        session['ID'] = unique_id()
-        flash('Created new cookie ' + session.get('ID'))
 
-    hometeam = ()
-    awayteam = ()
-    homeTeamName = ""
-    awayTeamName = ""
+    # Reset required fields in case cookie not found
+    homeTeamName = "Not Set"
+    awayTeamName = "Not Set"
     fixedPlayers = []
+    current_form = "No Form Loaded"
 
-    if session.get('scan_result'):
-        flash('Using existing scan result ' + session.get('ID'))
-        lines = session.get('scan_result').splitlines()
-        teams = scantools.findTeams(lines)
-        homeTeamName = teams[0]
-        awayTeamName = teams[1]
+    if request.cookies.get('ID'):
+        flash('Cookie found:', request.cookies.get('ID'))
+        if request.cookies.get('scan_result'):
+            flash('Using existing scan result')
+            current_form=request.cookies.get('current_form')
+            lines = request.cookies.get('scan_result').splitlines()
+            teams = scantools.findTeams(lines)
+            homeTeamName = teams[0]
+            awayTeamName = teams[1]
 
-        players = scantools.findPlayers(lines)
-        # for player in players:
-        #     print("player :", player)
+            players = scantools.findPlayers(lines)
+            for player in players:
+                print("player :", player)
 
-        fixedPlayers = scantools.fixNames(players)
-        # for fplayer in fixedPlayers:
-        #     print("fplayer: ", fplayer)
+            fixedPlayers = scantools.fixNames(players)
+            for fplayer in fixedPlayers:
+               print("fplayer: ", fplayer)
 
-        # invertedPlayers = invertPlayers(fixedPlayers)
-        # print(invertedPlayers)
-        hometeam = scantools.createRoster(fixedPlayers, 0, 1, 2, 3, 4)
-        # print(homeTeamName)
-        # for p in hometeam.items():
-        #     print("hometeam :", p)
+            hometeam = scantools.createRoster(fixedPlayers, 0, 1, 2, 3, 4)
+            # print(homeTeamName)
+            # for p in hometeam.items():
+            #     print("hometeam :", p)
 
-        awayteam = scantools.createRoster(fixedPlayers, 5, 6, 7, 8, 9)
-        # print(awayTeamName)
-        # for p in awayteam.items():
-        #     print("awayteam: ", p)
+            awayteam = scantools.createRoster(fixedPlayers, 5, 6, 7, 8, 9)
+            if len(awayteam) == 0:
+                if "bye" in homeTeamName.lower():
+                    t = homeTeamName
+                    homeTeamName = awayTeamName
+                    awayTeamName = t
 
-    return render_template('index.html', title='Home', teams=fixedPlayers, hometeam=hometeam, awayteam=awayteam, homename=homeTeamName, awayname=awayTeamName)
+            # print(awayTeamName)
+            # for p in awayteam.items():
+            #     print("awayteam: ", p)
+
+        resp = make_response(render_template('index.html', title='Home',
+                                             teams=fixedPlayers,
+                                             homename=homeTeamName,
+                                             awayname=awayTeamName,
+                                             current_form = current_form))
+    else:
+        resp = make_response(render_template('index.html', title='Home',
+                                             teams=fixedPlayers,
+                                             homename=homeTeamName,
+                                             awayname=awayTeamName,
+                                             current_form=current_form))
+        resp.set_cookie('ID', unique_id())
+
+    return resp
 
 
 @app.route('/upload')
@@ -101,46 +116,48 @@ def uploader():
         if not allowed_file(f.filename):
             flash('Invalid file type')
             return redirect(url_for('index'))
-        os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], session.get('ID')), exist_ok=True)
+        os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], request.cookies.get('ID')), exist_ok=True)
         filename = secure_filename(f.filename)
-        f.save(os.path.join(app.config['UPLOAD_FOLDER'], session.get('ID'), filename))
+        f.save(os.path.join(app.config['UPLOAD_FOLDER'], request.cookies.get('ID'), filename))
         flash('file uploaded successfully')
-        return redirect(url_for('index'))
+        return redirect(url_for('files'))
 
 
 @app.route('/files', methods=['GET'])
 def files():
-    f_list = os.listdir(os.path.join(app.config['UPLOAD_FOLDER'], session.get('ID')))
-    f_list.sort()
     f_dict={}
+    upload_path = os.path.join(app.config['UPLOAD_FOLDER'], request.cookies.get('ID'))
+    if os.path.exists(upload_path):
+        f_list = os.listdir(upload_path)
+        f_list.sort()
 
-    # Priminng the keys
-    for f in f_list:
-        f_dict[f.rsplit('.', 1)[0]]={}
+        # Priming the keys
+        for f in f_list:
+            f_dict[f.rsplit('.', 1)[0]]={}
 
-    # Loading the available files per key
-    for f in f_list:
-        f_dict[f.rsplit('.', 1)[0]][f.rsplit('.', 1)[1]] = f
+        # Loading the available files per key
+        for f in f_list:
+            f_dict[f.rsplit('.', 1)[0]][f.rsplit('.', 1)[1]] = f
 
-    return render_template('file_list.html', files=f_dict, currdir=app.config['UPLOAD_FOLDER'] + "/" + session.get('ID'))
+    return render_template('file_list.html', files=f_dict, currdir=app.config['UPLOAD_FOLDER'] + "/" + request.cookies.get('ID'))
 
 
 @app.route('/convert/<filename>', methods=['GET'])
 def convert(filename):
-    convert_file = os.path.join(app.config['UPLOAD_FOLDER'], session.get('ID'), filename)
+    convert_file = os.path.join(app.config['UPLOAD_FOLDER'], request.cookies.get('ID'), filename)
     newname = filename.rsplit('.', 1)[0] + '.png'
-    png_file = os.path.join(app.config['UPLOAD_FOLDER'], session.get('ID'), newname)
+    png_file = os.path.join(app.config['UPLOAD_FOLDER'], request.cookies.get('ID'), newname)
 
-    print("Conv Start: ", time.strftime('%X %x %Z'))
+    # print("Conv Start: ", time.strftime('%X %x %Z'))
     pdf2png(convert_file, "-r300", png_file)
-    print("Conv End: ", time.strftime('%X %x %Z'))
+    # print("Conv End: ", time.strftime('%X %x %Z'))
 
     return redirect(url_for('files'))
 
 
 @app.route('/scanpng/<filename>', methods=['GET'])
 def scanpng(filename):
-    scan_file = os.path.join(app.config['UPLOAD_FOLDER'], session.get('ID'), filename)
+    scan_file = os.path.join(app.config['UPLOAD_FOLDER'], request.cookies.get('ID'), filename)
 
     # print("Scan Start: ", time.strftime('%X %x %Z'))
     result = scantools.scan(filename, Image.open(scan_file))
@@ -149,22 +166,27 @@ def scanpng(filename):
     session['scan_result'] = result
     session['current_form'] = filename.rsplit('.', 1)[0]
 
-    newname = os.path.join(app.config['UPLOAD_FOLDER'], session.get('ID'), filename.rsplit('.', 1)[0] + '.txt')
+    newname = os.path.join(app.config['UPLOAD_FOLDER'], request.cookies.get('ID'), filename.rsplit('.', 1)[0] + '.txt')
 
     with open(newname, 'w') as f:
         f.write(result)
 
-    return redirect(url_for('index'))
+    resp = make_response(redirect(url_for('index')))
+    resp.set_cookie('scan_result', result)
+    resp.set_cookie('current_form', filename.rsplit('.', 1)[0])
+
+    return resp
 
 
 @app.route('/loadtxt/<filename>', methods=['GET'])
 def loadtxt(filename):
-    file = os.path.join(app.config['UPLOAD_FOLDER'], session.get('ID'), filename)
+    file = os.path.join(app.config['UPLOAD_FOLDER'], request.cookies.get('ID'), filename)
 
     with open(file, 'r') as f:
         result = f.read()
 
-    session['scan_result'] = result
-    session['current_form'] = filename.rsplit('.', 1)[0]
+    resp = make_response(redirect(url_for('index')))
+    resp.set_cookie('scan_result', result)
+    resp.set_cookie('current_form', filename.rsplit('.', 1)[0])
 
-    return redirect(url_for('index'))
+    return resp
