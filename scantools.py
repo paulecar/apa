@@ -37,23 +37,22 @@ def scan(title, image):
 def findTeams(lines):
     found = False
     for idx, line in enumerate(lines):
-        print("line", idx, line)
+        # print("line", idx, line)
         if "Team:"  in line:
-            print("Found Teams:", type(line), idx, line)
+            # print("Found Teams:", type(line), idx, line)
             splitline = line.split("Team:")
             found = True
             break
         if "Team 0"  in line:
-            print("Found Teams:", type(line), idx, line)
+            # print("Found Teams:", type(line), idx, line)
             splitline = line.split("Team 0")
             found = True
             break
 
     if found:
         teams = [t.strip() for t in splitline]
-        print(type(teams), teams)
     else:
-        print("Teams not found")
+        teams = ['', "Not Found", "Not Found"]
     return teams[1], teams[2]
 
 
@@ -65,12 +64,12 @@ def findPlayers(lines):
         if "SL MP" in line:
             start = idx
             stop = idx + 9
-            print("Found Players:", idx, start, stop, line)
+            # print("Found Players:", idx, start, stop, line)
         if idx==stop:
             break
         if idx > start:
             dirtyline = line.split()
-            print("Dirty line: ", dirtyline, line)
+            # print("Dirty line: ", dirtyline, line)
             # Start of season lists player with fees to pay, which messes with the parse
             cleanline.append([i for i in dirtyline if i not in ('*','N','$25.00','$15.00')])
     return cleanline
@@ -93,21 +92,21 @@ def splitNames(p):
 def fixNames(players):
     cleanPlayers = []
     for pair in players:
-        print(len(pair), pair)
+        # print(len(pair), pair)
         pair = [i for i in pair if i not in ('', '.')]
         pair_pattern = listCheck(pair)
-        print("Pattern:", pair_pattern)
+        # print("Pattern:", pair_pattern)
         if pair_pattern == pattern[1] or \
            pair_pattern == pattern[8]:
-            print("fixin trouble 18:", pair_pattern, pair)
+            # print("fixin trouble 18:", pair_pattern, pair)
             pair[3] = ''.join((pair[3] + " " + pair[4]))
             del pair[4]
         elif pair_pattern == pattern[2]:
-            print("fixin trouble 2:", pair_pattern, pair)
+            # print("fixin trouble 2:", pair_pattern, pair)
             pair[8] = ''.join((pair[8] + " " + pair[9]))
             del pair[9]
         elif pair_pattern == pattern[3]:
-            print("fixin trouble 3:", pair_pattern, pair)
+            # print("fixin trouble 3:", pair_pattern, pair)
             pair[3] = ''.join((pair[3] + " " + pair[4]))
             pair[8] = ''.join((pair[8] + " " + pair[9]))
             del pair[4]
@@ -116,7 +115,7 @@ def fixNames(players):
              pair_pattern == pattern[5] or \
              pair_pattern == pattern[6] or \
              pair_pattern == pattern[7]:
-            print("fixin trouble 4567:", pair_pattern, pair)
+            # print("fixin trouble 4567:", pair_pattern, pair)
             pair = splitNames(pair)
 
         cleanpair = [col.rstrip(',') for col in pair]
@@ -133,7 +132,7 @@ def createRoster(teamlists, sl, mp, id, last, first):
         # print("Row:", row)
         # format of each entry[apaId]: (skill, match, last, first )
         try:
-            roster[row[id]] = (row[sl], row[mp], row[first], row[last])
+            roster[row[id]] = (row[sl], row[mp], row[first] + ' ' + row[last])
         except IndexError:
             print("Failure in row: ", row )
     return roster

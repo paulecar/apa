@@ -1,7 +1,7 @@
 from app import app
-from app.forms import UploadForm
+from app.forms import UploadForm, Manage
 from werkzeug.utils import secure_filename
-from flask import render_template, flash, redirect, url_for, request, session, make_response
+from flask import render_template, flash, redirect, url_for, request, make_response
 from PIL import Image
 
 
@@ -9,7 +9,14 @@ import uuid
 import os
 import locale, ghostscript
 import scantools
+import json
+import itertools
 import time
+import datetime
+
+# Cookie expiration date
+expire_date = datetime.datetime.now()
+expire_date = expire_date + datetime.timedelta(days=90)
 
 
 def unique_id():
@@ -42,6 +49,8 @@ def index():
     # Reset required fields in case cookie not found
     homeTeamName = "Not Set"
     awayTeamName = "Not Set"
+    hometeam=[]
+    awayteam=[]
     fixedPlayers = []
     current_form = "No Form Loaded"
 
@@ -56,19 +65,21 @@ def index():
             awayTeamName = teams[1]
 
             players = scantools.findPlayers(lines)
-            for player in players:
-                print("player :", player)
+            # for player in players:
+            #     print("player :", player)
 
             fixedPlayers = scantools.fixNames(players)
-            for fplayer in fixedPlayers:
-               print("fplayer: ", fplayer)
+            # for fplayer in fixedPlayers:
+            #    print("fplayer: ", fplayer)
 
             hometeam = scantools.createRoster(fixedPlayers, 0, 1, 2, 3, 4)
             # print(homeTeamName)
             # for p in hometeam.items():
             #     print("hometeam :", p)
 
+            # TODO More elegant way to identify sheet with a BYE
             awayteam = scantools.createRoster(fixedPlayers, 5, 6, 7, 8, 9)
+            print(hometeam)
             if len(awayteam) == 0:
                 if "bye" in homeTeamName.lower():
                     t = homeTeamName
@@ -79,25 +90,38 @@ def index():
             # for p in awayteam.items():
             #     print("awayteam: ", p)
 
+        # Create response object so we can set cookie values
         resp = make_response(render_template('index.html', title='Home',
                                              teams=fixedPlayers,
                                              homename=homeTeamName,
                                              awayname=awayTeamName,
                                              current_form = current_form))
+
+        # Store results of the parsing into the cookie
+        resp.set_cookie('home_roster', json.dumps(hometeam), expires=expire_date)
+        resp.set_cookie('away_roster', json.dumps(awayteam), expires=expire_date)
+        resp.set_cookie('home_name', homeTeamName, expires=expire_date)
+        resp.set_cookie('away_name', awayTeamName, expires=expire_date)
+
     else:
+        # Create response object so we can set cookie values
         resp = make_response(render_template('index.html', title='Home',
                                              teams=fixedPlayers,
                                              homename=homeTeamName,
                                              awayname=awayTeamName,
                                              current_form=current_form))
-        resp.set_cookie('ID', unique_id())
+
+        # Create a cookie ID, which is used to create a separate folder on the server for documents
+        # TODO Review whether we can use the cookie in place of documents on the server
+        resp.set_cookie('ID', unique_id(), expires=expire_date)
 
     return resp
 
 
 @app.route('/upload')
 def upload():
-    return render_template('upload.html')
+    form=UploadForm()
+    return render_template('upload.html', title='Upload PDF', form=form)
 
 
 @app.route('/uploader', methods=['GET', 'POST'])
@@ -163,17 +187,14 @@ def scanpng(filename):
     result = scantools.scan(filename, Image.open(scan_file))
     # print("Scan End: ", time.strftime('%X %x %Z'))
 
-    session['scan_result'] = result
-    session['current_form'] = filename.rsplit('.', 1)[0]
-
     newname = os.path.join(app.config['UPLOAD_FOLDER'], request.cookies.get('ID'), filename.rsplit('.', 1)[0] + '.txt')
 
     with open(newname, 'w') as f:
         f.write(result)
 
     resp = make_response(redirect(url_for('index')))
-    resp.set_cookie('scan_result', result)
-    resp.set_cookie('current_form', filename.rsplit('.', 1)[0])
+    resp.set_cookie('scan_result', result, expires=expire_date)
+    resp.set_cookie('current_form', filename.rsplit('.', 1)[0], expires=expire_date)
 
     return resp
 
@@ -186,7 +207,26 @@ def loadtxt(filename):
         result = f.read()
 
     resp = make_response(redirect(url_for('index')))
-    resp.set_cookie('scan_result', result)
-    resp.set_cookie('current_form', filename.rsplit('.', 1)[0])
+    resp.set_cookie('scan_result', result, expires=expire_date)
+    resp.set_cookie('current_form', filename.rsplit('.', 1)[0], expires=expire_date)
+
+    return resp
+
+
+@app.route('/manage', methods=['GET', 'POST'])
+def manage():
+    form=Manage()
+    ht = json.loads(request.cookies.get('home_roster'))
+    at = json.loads(request.cookies.get('away_roster'))
+    htn = request.cookies.get('home_name')
+    atn = request.cookies.get('away_name')
+
+    resp = make_response(render_template('manage.html', title='Manage Roster', form=form,
+                                         hometeam=ht,
+                                         awayteam=at,
+                                         homename=htn,
+                                         awayname=atn))
+
+    # resp.set_cookie('scan_result', result, expires=expire_date)
 
     return resp

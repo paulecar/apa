@@ -7,3 +7,5 @@ class UploadForm(FlaskForm):
     filename = FileInput('File')
     submit = SubmitField('Upload')
 
+class Manage(FlaskForm):
+    submit = SubmitField('OK')

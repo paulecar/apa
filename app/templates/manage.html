@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+
+    <h1 class="text-muted" align="center"> APA Utils<br></h1>
+    <h2  class="text-muted" align="center"> Manage Match Using Scanned Rosters</h2>
+
+    <form action="" method="post">
+    {{ form.hidden_tag() }}
+
+        <div class="table-responsive">
+
+            <table title="Teams" class="table">
+                <tr>
+                    <th colspan="4" align="center">{{homename}}</th>
+                </tr>
+                <th>SL</th>
+                <th>Name</th>
+                <th>Role Call</th>
+                <th>Played</th>
+                {% for k, v in hometeam.items() %}
+                    <tr>
+                        <td>{{v[0]}}</td>
+                        <td>{{v[2]}}</td>
+                        <td>
+                            <div class="checkbox-inline">
+                              <label><input checked="checked", type="checkbox" value="1"></label>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="checkbox-inline">
+                              <label><input type="checkbox" value="1"></label>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                <tr></tr>
+                <tr>
+                    <th colspan="4" align="center">{{awayname}}</th>
+                </tr>
+                <th>SL</th>
+                <th>Name</th>
+                <th>Role Call</th>
+                <th>Played</th>
+                {% for k, v in awayteam.items() %}
+                    <tr>
+                        <td>{{v[0]}}</td>
+                        <td>{{v[2]}}</td>
+                        <td>
+                            <div class="checkbox-inline">
+                              <label><input checked="checked", type="checkbox" value="1"></label>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="checkbox-inline">
+                              <label><input type="checkbox" value="1"></label>
+                            </div>
+                        </td>
+                        <td></td>
+                    </tr>
+                {% endfor %}
+            </table>
+
+        </div>
+
+        <p>{{ form.submit() }}</p>
+    </form>
+
+{% endblock %}
+
