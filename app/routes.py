@@ -3,12 +3,11 @@ from app.forms import UploadForm, Manage
 from werkzeug.utils import secure_filename
 from flask import render_template, flash, redirect, url_for, request, make_response
 from PIL import Image
-from apa_tools import unique_id, pdf2png, async_scan
 from threading import Thread
+from apa_tools import unique_id, pdf2png, async_scan, build_combinations
 
-import os, scantools, json
-import itertools
-import time, datetime
+
+import os, scantools, json, time, datetime
 
 # Cookie expiration date
 expire_date = datetime.datetime.now()
@@ -207,10 +206,16 @@ def manage():
     form=Manage()
 
     # Load rosters from cookies
+
     ht = json.loads(request.cookies.get('home_roster'))
     at = json.loads(request.cookies.get('away_roster'))
     htn = request.cookies.get('home_name')
     atn = request.cookies.get('away_name')
+
+    ht_options = build_combinations(ht)
+    at_options = build_combinations(at)
+    print("Home Team combos: ", len(ht_options), ht_options)
+    print("Away Team combos: ", len(at_options), at_options)
 
     # POST action - apply check box status to cookies
     if request.method == 'POST':
@@ -237,7 +242,12 @@ def manage():
             else:
                 at[k]['Played'] = 'N'
 
+        ht_options = build_combinations(ht)
+        at_options = build_combinations(at)
+
     resp = make_response(render_template('manage.html', title='Manage Roster', form=form,
+                                         ht_options=len(ht_options),
+                                         at_options=len(at_options),
                                          hometeam=ht,
                                          awayteam=at,
                                          homename=htn,
@@ -245,5 +255,6 @@ def manage():
 
     resp.set_cookie('home_roster', json.dumps(ht), expires=expire_date)
     resp.set_cookie('away_roster', json.dumps(at), expires=expire_date)
+
 
     return resp

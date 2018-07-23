@@ -8,4 +8,4 @@ class UploadForm(FlaskForm):
     submit = SubmitField('Upload')
 
 class Manage(FlaskForm):
-    submit = SubmitField('OK')
+    submit = SubmitField('Submit')

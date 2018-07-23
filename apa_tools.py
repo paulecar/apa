@@ -2,6 +2,7 @@ import uuid, os, time
 import locale, ghostscript
 import scantools
 from PIL import Image
+from itertools import combinations
 
 
 def unique_id():
@@ -41,3 +42,21 @@ def async_scan(path, filename):
     with open(txt_file, 'w') as f:
         f.write(result)
 
+def build_combinations(roster):
+    available_tonight = {}
+
+    for apa_id in roster.keys():
+        if roster[apa_id]['Absent'] != 'Y':
+            available_tonight[apa_id] = roster[apa_id]
+
+    c = combinations(available_tonight.keys(), 5)
+    all_line_ups = list(c)
+    available_line_ups=[]
+    skill_level='SL'
+    for lu in all_line_ups:
+        total_sl=0
+        for player in lu:
+            total_sl=total_sl+int(roster[player][skill_level])
+        if total_sl <= 23:
+            available_line_ups.append(lu)
+    return available_line_ups

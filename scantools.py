@@ -132,7 +132,8 @@ def createRoster(teamlists, sl, mp, id, last, first):
     for row in teamlists:
         # format of each entry[apaId]: (skill, match, last, first )
         try:
-            roster[row[id]] = {'SL': row[sl], "Name": row[first] + ' ' + row[last]}
+            roster[row[id]] = {'SL': row[sl], "Name": row[first] + ' ' + row[last],
+                               "Absent" : "N", "Played" : "N"}
         except IndexError:
             print("Failure in row: ", row )
     return roster
