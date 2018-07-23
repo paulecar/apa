@@ -214,8 +214,6 @@ def manage():
 
     ht_options = build_combinations(ht)
     at_options = build_combinations(at)
-    print("Home Team combos: ", len(ht_options), ht_options)
-    print("Away Team combos: ", len(at_options), at_options)
 
     # POST action - apply check box status to cookies
     if request.method == 'POST':

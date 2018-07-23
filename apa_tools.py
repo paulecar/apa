@@ -42,15 +42,20 @@ def async_scan(path, filename):
     with open(txt_file, 'w') as f:
         f.write(result)
 
+
 def build_combinations(roster):
     available_tonight = {}
 
+    # Drop players that are marked as Absent for the evening
     for apa_id in roster.keys():
         if roster[apa_id]['Absent'] != 'Y':
             available_tonight[apa_id] = roster[apa_id]
 
+    # From the available players, calculate all possible combinations
     c = combinations(available_tonight.keys(), 5)
     all_line_ups = list(c)
+
+    # From all possible combinations calculate available combinations (SL<=23)
     available_line_ups=[]
     skill_level='SL'
     for lu in all_line_ups:
@@ -59,4 +64,33 @@ def build_combinations(roster):
             total_sl=total_sl+int(roster[player][skill_level])
         if total_sl <= 23:
             available_line_ups.append(lu)
-    return available_line_ups
+
+    # Create list of players who have already played
+    matches_played=False
+    match_played=[]
+    for k, v in roster.items():
+        if v['Played'] == 'Y':
+            matches_played=True
+            match_played.append(k)
+    print("Played :", match_played)
+
+    # Now eliminate combinations based on matches played
+    remaining_line_ups=[]
+    if matches_played:
+        for available_line_up in available_line_ups:
+            line_up_still_avail=True
+            for player in match_played:
+                if player not in available_line_up:
+                    line_up_still_avail=False
+            if line_up_still_avail:
+                remaining_line_ups.append(available_line_up)
+    else:
+        remaining_line_ups=available_line_ups
+
+    print("All Line Ups: ", all_line_ups)
+    print("Avail Line Ups: ", available_line_ups)
+    print("Remaining Line Ups: ", remaining_line_ups)
+    print("All Line Ups: ", len(all_line_ups))
+    print("Avail Line Ups: ", len(available_line_ups))
+    print("Remaining Line Ups: ", len(remaining_line_ups))
+    return remaining_line_ups

@@ -12,14 +12,16 @@
 
             <table title="Teams" class="table">
                 <tr>
-                    <th colspan="4" align="center">Home team: {{homename}} - line ups available [{{ht_options}}]</th>
+                    <th colspan="4" align="center">Home team: {{homename}} - line ups available [ {{ht_options}} ]</th>
                 </tr>
+                <th>APA #</th>
                 <th>SL</th>
                 <th>Name</th>
                 <th>Absent</th>
                 <th>Played</th>
                 {% for k, v in hometeam.items() %}
                     <tr>
+                        <td>{{k}}</td>
                         <td>{{v['SL']}}</td>
                         <td>{{v['Name']}}</td>
                         <td>
@@ -43,14 +45,16 @@
                     </tr>
                 {% endfor %}
                 <tr>
-                    <th colspan="4" align="center">Away team: {{awayname}} - line ups available [{{at_options}}].</th>
+                    <th colspan="4" align="center">Away team: {{awayname}} - line ups available [ {{at_options}} ]</th>
                 </tr>
+                <th>APA #</th>
                 <th>SL</th>
                 <th>Name</th>
                 <th>Absent</th>
                 <th>Played</th>
                 {% for k, v in awayteam.items() %}
                     <tr>
+                        <td>{{k}}</td>
                         <td>{{v['SL']}}</td>
                         <td>{{v['Name']}}</td>
                         <td>
