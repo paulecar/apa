@@ -16,47 +16,61 @@
                 </tr>
                 <th>SL</th>
                 <th>Name</th>
-                <th>Role Call</th>
+                <th>Absent</th>
                 <th>Played</th>
                 {% for k, v in hometeam.items() %}
                     <tr>
-                        <td>{{v[0]}}</td>
-                        <td>{{v[2]}}</td>
+                        <td>{{v['SL']}}</td>
+                        <td>{{v['Name']}}</td>
                         <td>
                             <div class="checkbox-inline">
-                              <label><input checked="checked", type="checkbox" value="1"></label>
+                              <label><input type="checkbox" name="h_absent" value={{k}}
+                              {% if v['Absent'] == "Y" %}
+                                  checked
+                              {% endif %}
+                              ></label>
                             </div>
                         </td>
                         <td>
                             <div class="checkbox-inline">
-                              <label><input type="checkbox" value="1"></label>
+                              <label><input type="checkbox" name="h_played" value={{k}}
+                              {% if v['Played'] == "Y" %}
+                                  checked
+                              {% endif %}
+                              ></label>
                             </div>
                         </td>
                     </tr>
                 {% endfor %}
-                <tr></tr>
                 <tr>
                     <th colspan="4" align="center">{{awayname}}</th>
                 </tr>
                 <th>SL</th>
                 <th>Name</th>
-                <th>Role Call</th>
+                <th>Absent</th>
                 <th>Played</th>
                 {% for k, v in awayteam.items() %}
                     <tr>
-                        <td>{{v[0]}}</td>
-                        <td>{{v[2]}}</td>
+                        <td>{{v['SL']}}</td>
+                        <td>{{v['Name']}}</td>
                         <td>
                             <div class="checkbox-inline">
-                              <label><input checked="checked", type="checkbox" value="1"></label>
+                              <label><input type="checkbox" name="a_absent" value={{k}}
+                              {% if v['Absent'] == "Y" %}
+                                  checked
+                              {% endif %}
+                              ></label>
                             </div>
                         </td>
                         <td>
                             <div class="checkbox-inline">
-                              <label><input type="checkbox" value="1"></label>
+                              <label><input type="checkbox" name="a_played" value={{k}}
+                              {% if v['Played'] == "Y" %}
+                                  checked
+                              {% endif %}
+                              ></label>
                             </div>
                         </td>
-                        <td></td>
                     </tr>
                 {% endfor %}
             </table>

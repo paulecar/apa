@@ -128,11 +128,11 @@ def fixNames(players):
 
 def createRoster(teamlists, sl, mp, id, last, first):
     roster = {}
+
     for row in teamlists:
-        # print("Row:", row)
         # format of each entry[apaId]: (skill, match, last, first )
         try:
-            roster[row[id]] = (row[sl], row[mp], row[first] + ' ' + row[last])
+            roster[row[id]] = {'SL': row[sl], "Name": row[first] + ' ' + row[last]}
         except IndexError:
             print("Failure in row: ", row )
     return roster

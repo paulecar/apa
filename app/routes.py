@@ -3,43 +3,21 @@ from app.forms import UploadForm, Manage
 from werkzeug.utils import secure_filename
 from flask import render_template, flash, redirect, url_for, request, make_response
 from PIL import Image
+from apa_tools import unique_id, pdf2png, async_scan
+from threading import Thread
 
-
-import uuid
-import os
-import locale, ghostscript
-import scantools
-import json
+import os, scantools, json
 import itertools
-import time
-import datetime
+import time, datetime
 
 # Cookie expiration date
 expire_date = datetime.datetime.now()
 expire_date = expire_date + datetime.timedelta(days=90)
 
 
-def unique_id():
-    return hex(uuid.uuid4().time)[2:-1]
-
-
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
-
-
-def pdf2png(pdf_input_path, dpi, output_path):
-    args = ["pdf2png", # actual value doesn't matter
-            "-dNOPAUSE",
-            "-sDEVICE=png16m",
-            dpi,
-            "-sOutputFile=" + output_path,
-            pdf_input_path]
-    # arguments have to be bytes, encode them
-    encoding = locale.getpreferredencoding()
-    args = [a.encode(encoding) for a in args]
-
-    ghostscript.Ghostscript(*args)
 
 
 @app.route('/')
@@ -79,7 +57,6 @@ def index():
 
             # TODO More elegant way to identify sheet with a BYE
             awayteam = scantools.createRoster(fixedPlayers, 5, 6, 7, 8, 9)
-            print(hometeam)
             if len(awayteam) == 0:
                 if "bye" in homeTeamName.lower():
                     t = homeTeamName
@@ -124,6 +101,12 @@ def upload():
     return render_template('upload.html', title='Upload PDF', form=form)
 
 
+# TODO Finish scan result page - not sure if this should just render result or parse again (reset)
+@app.route('/scanresult')
+def scanresult():
+    return render_template('scanresult.html', title='Scan Results')
+
+
 @app.route('/uploader', methods=['GET', 'POST'])
 def uploader():
     if request.method == 'POST':
@@ -140,10 +123,16 @@ def uploader():
         if not allowed_file(f.filename):
             flash('Invalid file type')
             return redirect(url_for('index'))
+
+        # Valid file type uploaded to directory that matches the users cookie ID value (uuid)
         os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], request.cookies.get('ID')), exist_ok=True)
         filename = secure_filename(f.filename)
         f.save(os.path.join(app.config['UPLOAD_FOLDER'], request.cookies.get('ID'), filename))
         flash('file uploaded successfully')
+
+        # Start backgound conversion and scan process
+        path=os.path.join(app.config['UPLOAD_FOLDER'], request.cookies.get('ID'))
+        Thread(target=async_scan, args=(path, filename)).start()
         return redirect(url_for('files'))
 
 
@@ -216,10 +205,37 @@ def loadtxt(filename):
 @app.route('/manage', methods=['GET', 'POST'])
 def manage():
     form=Manage()
+
+    # Load rosters from cookies
     ht = json.loads(request.cookies.get('home_roster'))
     at = json.loads(request.cookies.get('away_roster'))
     htn = request.cookies.get('home_name')
     atn = request.cookies.get('away_name')
+
+    # POST action - apply check box status to cookies
+    if request.method == 'POST':
+
+        # Set absent flag and played flag in home roster
+        for k, v in ht.items():
+            if k in request.form.getlist('h_absent'):
+                ht[k]['Absent'] = 'Y'
+            else:
+                ht[k]['Absent'] = 'N'
+            if k in request.form.getlist('h_played'):
+                ht[k]['Played'] = 'Y'
+            else:
+                ht[k]['Played'] = 'N'
+
+        # Set absent flag and played flag in away roster
+        for k, v in at.items():
+            if k in request.form.getlist('a_absent'):
+                at[k]['Absent'] = 'Y'
+            else:
+                at[k]['Absent'] = 'N'
+            if k in request.form.getlist('a_played'):
+                at[k]['Played'] = 'Y'
+            else:
+                at[k]['Played'] = 'N'
 
     resp = make_response(render_template('manage.html', title='Manage Roster', form=form,
                                          hometeam=ht,
@@ -227,6 +243,7 @@ def manage():
                                          homename=htn,
                                          awayname=atn))
 
-    # resp.set_cookie('scan_result', result, expires=expire_date)
+    resp.set_cookie('home_roster', json.dumps(ht), expires=expire_date)
+    resp.set_cookie('away_roster', json.dumps(at), expires=expire_date)
 
     return resp
