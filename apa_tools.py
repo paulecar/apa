@@ -72,7 +72,6 @@ def build_combinations(roster):
         if v['Played'] == 'Y':
             matches_played=True
             match_played.append(k)
-    print("Played :", match_played)
 
     # Now eliminate combinations based on matches played
     remaining_line_ups=[]
@@ -87,10 +86,18 @@ def build_combinations(roster):
     else:
         remaining_line_ups=available_line_ups
 
-    print("All Line Ups: ", all_line_ups)
-    print("Avail Line Ups: ", available_line_ups)
-    print("Remaining Line Ups: ", remaining_line_ups)
-    print("All Line Ups: ", len(all_line_ups))
-    print("Avail Line Ups: ", len(available_line_ups))
-    print("Remaining Line Ups: ", len(remaining_line_ups))
     return remaining_line_ups
+
+
+def mark_roster(roster, options):
+    for player in roster:
+        roster[player]['Option'] = 'N'
+
+    for roster_player in roster:
+        for option in options:
+            for player in option:
+                if roster_player == player:
+                    roster[roster_player]['Option'] = 'Y'
+                    break
+
+    return roster

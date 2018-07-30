@@ -22,7 +22,7 @@
                         <td>No Image</td>
                     {% endif %}
                     {% if 'txt' in files.keys() %}
-                        <td><a title="Select this scan result" href="{{ url_for('loadtxt', filename=files['txt']) }}">Result</a></td>
+                        <td><a title="Select this scan result" href="{{ url_for('loadtxt', filename=files['txt']) }}">Load Scan</a></td>
                     {% else %}
                         <td>No Scan Result</td>
                     {% endif %}

@@ -3,7 +3,7 @@
 {% block app_content %}
 
     <h1 class="text-muted" align="center"> APA Utils<br></h1>
-    <h2  class="text-muted" align="center"> Manage Match Using Scanned Rosters</h2>
+    <h2  class="text-muted" align="center"> Manage Match Rosters</h2>
 
     <form action="" method="post">
     {{ form.hidden_tag() }}
@@ -12,7 +12,10 @@
 
             <table title="Teams" class="table">
                 <tr>
-                    <th colspan="4" align="center">Home team: {{homename}} - line ups available [ {{ht_options}} ]</th>
+                    <th colspan="4" align="center">Home team: {{homename}} -
+                        <a title="Show available line ups" href="{{ url_for('lineups', roster='home')}}">available line ups </a>
+                        [ {{ht_option_count}} ]
+                    </th>
                 </tr>
                 <th>APA #</th>
                 <th>SL</th>
@@ -20,14 +23,19 @@
                 <th>Absent</th>
                 <th>Played</th>
                 {% for k, v in hometeam.items() %}
-                    <tr>
+                    <tr {% if v['Option'] == 'Y' %}
+                            class="success"
+                        {% endif %}
+                        {% if v['Absent'] == 'Y' %}
+                            class="text-muted"
+                        {% endif %} >
                         <td>{{k}}</td>
                         <td>{{v['SL']}}</td>
                         <td>{{v['Name']}}</td>
                         <td>
                             <div class="checkbox-inline">
                               <label><input type="checkbox" name="h_absent" value={{k}}
-                              {% if v['Absent'] == "Y" %}
+                              {% if v['Absent'] == 'Y' %}
                                   checked
                               {% endif %}
                               ></label>
@@ -36,7 +44,7 @@
                         <td>
                             <div class="checkbox-inline">
                               <label><input type="checkbox" name="h_played" value={{k}}
-                              {% if v['Played'] == "Y" %}
+                              {% if v['Played'] == 'Y' %}
                                   checked
                               {% endif %}
                               ></label>
@@ -45,7 +53,10 @@
                     </tr>
                 {% endfor %}
                 <tr>
-                    <th colspan="4" align="center">Away team: {{awayname}} - line ups available [ {{at_options}} ]</th>
+                    <th colspan="4" align="center">Away team: {{awayname}} -
+                        <a title="Show available line ups" href="{{ url_for('lineups', roster='away')}}">available line ups </a>
+                        [ {{at_option_count}} ]
+                    </th>
                 </tr>
                 <th>APA #</th>
                 <th>SL</th>
@@ -53,7 +64,12 @@
                 <th>Absent</th>
                 <th>Played</th>
                 {% for k, v in awayteam.items() %}
-                    <tr>
+                    <tr {% if v['Option'] == 'Y' %}
+                            class="success"
+                        {% endif %}
+                        {% if v['Absent'] == 'Y' %}
+                            class="text-muted"
+                        {% endif %} >
                         <td>{{k}}</td>
                         <td>{{v['SL']}}</td>
                         <td>{{v['Name']}}</td>

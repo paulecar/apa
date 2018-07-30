@@ -4,7 +4,8 @@ from werkzeug.utils import secure_filename
 from flask import render_template, flash, redirect, url_for, request, make_response
 from PIL import Image
 from threading import Thread
-from apa_tools import unique_id, pdf2png, async_scan, build_combinations
+from apa_tools import unique_id, pdf2png, async_scan, build_combinations, mark_roster
+from collections import OrderedDict
 
 
 import os, scantools, json, time, datetime
@@ -23,72 +24,39 @@ def allowed_file(filename):
 @app.route('/index')
 def index():
 
-    # Reset required fields in case cookie not found
-    homeTeamName = "Not Set"
-    awayTeamName = "Not Set"
-    hometeam=[]
-    awayteam=[]
-    fixedPlayers = []
-    current_form = "No Form Loaded"
+    # Load data from cookies or set None values to render page
+    if request.cookies.get('teams'):
+        teams = json.loads(request.cookies.get('teams'))
+    else:
+        teams = []
+
+    if request.cookies.get('home_name'):
+        homeTeamName = request.cookies.get('home_name')
+    else:
+        homeTeamName = "Not Set"
+
+    if request.cookies.get('away_name'):
+        awayTeamName = request.cookies.get('away_name')
+    else:
+        awayTeamName = "Not Set"
+
+    if request.cookies.get('current_form'):
+        current_form = request.cookies.get('current_form')
+    else:
+        current_form = "No Form Loaded"
+
+    # Create response object so we can set cookie values
+    resp = make_response(render_template('index.html', title='Home',
+                                         teams=teams,
+                                         homename=homeTeamName,
+                                         awayname=awayTeamName,
+                                         current_form = current_form))
 
     if request.cookies.get('ID'):
         flash('Cookie found:', request.cookies.get('ID'))
-        if request.cookies.get('scan_result'):
-            flash('Using existing scan result')
-            current_form=request.cookies.get('current_form')
-            lines = request.cookies.get('scan_result').splitlines()
-            teams = scantools.findTeams(lines)
-            homeTeamName = teams[0]
-            awayTeamName = teams[1]
-
-            players = scantools.findPlayers(lines)
-            # for player in players:
-            #     print("player :", player)
-
-            fixedPlayers = scantools.fixNames(players)
-            # for fplayer in fixedPlayers:
-            #    print("fplayer: ", fplayer)
-
-            hometeam = scantools.createRoster(fixedPlayers, 0, 1, 2, 3, 4)
-            # print(homeTeamName)
-            # for p in hometeam.items():
-            #     print("hometeam :", p)
-
-            # TODO More elegant way to identify sheet with a BYE
-            awayteam = scantools.createRoster(fixedPlayers, 5, 6, 7, 8, 9)
-            if len(awayteam) == 0:
-                if "bye" in homeTeamName.lower():
-                    t = homeTeamName
-                    homeTeamName = awayTeamName
-                    awayTeamName = t
-
-            # print(awayTeamName)
-            # for p in awayteam.items():
-            #     print("awayteam: ", p)
-
-        # Create response object so we can set cookie values
-        resp = make_response(render_template('index.html', title='Home',
-                                             teams=fixedPlayers,
-                                             homename=homeTeamName,
-                                             awayname=awayTeamName,
-                                             current_form = current_form))
-
-        # Store results of the parsing into the cookie
-        resp.set_cookie('home_roster', json.dumps(hometeam), expires=expire_date)
-        resp.set_cookie('away_roster', json.dumps(awayteam), expires=expire_date)
-        resp.set_cookie('home_name', homeTeamName, expires=expire_date)
-        resp.set_cookie('away_name', awayTeamName, expires=expire_date)
-
     else:
-        # Create response object so we can set cookie values
-        resp = make_response(render_template('index.html', title='Home',
-                                             teams=fixedPlayers,
-                                             homename=homeTeamName,
-                                             awayname=awayTeamName,
-                                             current_form=current_form))
-
         # Create a cookie ID, which is used to create a separate folder on the server for documents
-        # TODO Review whether we can use the cookie in place of documents on the server
+        flash('Creating new session ID')
         resp.set_cookie('ID', unique_id(), expires=expire_date)
 
     return resp
@@ -198,7 +166,45 @@ def loadtxt(filename):
     resp.set_cookie('scan_result', result, expires=expire_date)
     resp.set_cookie('current_form', filename.rsplit('.', 1)[0], expires=expire_date)
 
+    lines = result.splitlines()
+    teams = scantools.findTeams(lines)
+    homeTeamName = teams[0]
+    awayTeamName = teams[1]
+
+    players = scantools.findPlayers(lines)
+    fixedPlayers = scantools.fixNames(players)
+    hometeam = scantools.createRoster(fixedPlayers, 0, 1, 2, 3, 4)
+    awayteam = scantools.createRoster(fixedPlayers, 5, 6, 7, 8, 9)
+    if len(awayteam) == 0:
+        if "bye" in homeTeamName.lower():
+            t = homeTeamName
+            homeTeamName = awayTeamName
+            awayTeamName = t
+
+    # Store results of the parsing into the cookie
+    resp.set_cookie('teams', json.dumps(fixedPlayers), expires=expire_date)
+    resp.set_cookie('home_roster', json.dumps(hometeam), expires=expire_date)
+    resp.set_cookie('away_roster', json.dumps(awayteam), expires=expire_date)
+    resp.set_cookie('home_name', homeTeamName, expires=expire_date)
+    resp.set_cookie('away_name', awayTeamName, expires=expire_date)
+
     return resp
+
+
+@app.route('/lineups/<roster>', methods=['GET'])
+def lineups(roster):
+
+    # Load rosters from cookies
+    if roster == "home":
+        avail_lineups = json.loads(request.cookies.get('home_options'))
+        roster = json.loads(request.cookies.get('home_roster'))
+        team_name = request.cookies.get('home_name')
+    else:
+        avail_lineups = json.loads(request.cookies.get('away_options'))
+        roster = json.loads(request.cookies.get('away_roster'))
+        team_name = request.cookies.get('away_name')
+
+    return render_template('lineups.html', available=avail_lineups, roster=roster, team=team_name)
 
 
 @app.route('/manage', methods=['GET', 'POST'])
@@ -211,9 +217,6 @@ def manage():
     at = json.loads(request.cookies.get('away_roster'))
     htn = request.cookies.get('home_name')
     atn = request.cookies.get('away_name')
-
-    ht_options = build_combinations(ht)
-    at_options = build_combinations(at)
 
     # POST action - apply check box status to cookies
     if request.method == 'POST':
@@ -240,19 +243,24 @@ def manage():
             else:
                 at[k]['Played'] = 'N'
 
-        ht_options = build_combinations(ht)
-        at_options = build_combinations(at)
+    ht_options = build_combinations(ht)
+    at_options = build_combinations(at)
+
+    ht=mark_roster(ht, ht_options)
+    at=mark_roster(at, at_options)
 
     resp = make_response(render_template('manage.html', title='Manage Roster', form=form,
-                                         ht_options=len(ht_options),
-                                         at_options=len(at_options),
-                                         hometeam=ht,
-                                         awayteam=at,
+                                         ht_option_count=len(ht_options),
+                                         at_option_count=len(at_options),
+                                         hometeam=OrderedDict(sorted(ht.items())),
+                                         awayteam=OrderedDict(sorted(at.items())),
                                          homename=htn,
                                          awayname=atn))
 
     resp.set_cookie('home_roster', json.dumps(ht), expires=expire_date)
     resp.set_cookie('away_roster', json.dumps(at), expires=expire_date)
+    resp.set_cookie('home_options', json.dumps(ht_options), expires=expire_date)
+    resp.set_cookie('away_options', json.dumps(at_options), expires=expire_date)
 
 
     return resp

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+
+    <h2>Available Line Ups for {{team}}</h2> </br>
+
+    <div class="table-responsive">
+        <table title="Available Line Ups" class="table">
+            <th>Player 1</th>
+            <th>Player 2</th>
+            <th>Player 3</th>
+            <th>Player 4</th>
+            <th>Player 5</th>
+            {% for lineup in available %}
+                <tr>
+                    {% for id in lineup %}
+                    <td {% if roster[id]['Played'] == 'Y' %}
+                            class="success"
+                        {% endif %} >
+                        [{{ roster[id]['SL'] }}] {{ roster[id]['Name'] }}
+                    </td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+
+{% endblock %}
