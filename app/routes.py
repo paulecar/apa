@@ -66,12 +66,6 @@ def upload():
     return render_template('upload.html', title='Upload PDF', form=form)
 
 
-# TODO Finish scan result page - not sure if this should just render result or parse again (reset)
-@app.route('/scanresult')
-def scanresult():
-    return render_template('scanresult.html', title='Scan Results')
-
-
 @app.route('/uploader', methods=['GET', 'POST'])
 def uploader():
     if request.method == 'POST':
