@@ -88,7 +88,7 @@
                         <td>
                             <div class="checkbox-inline">
                                 <label></label>
-                                <input type="checkbox" name="h_absent" value={{k}}
+                                <input type="checkbox" name="a_absent" value={{k}}
                                     {% if v['Absent'] == 'Y' %}
                                         checked
                                     {% endif %}
@@ -98,7 +98,7 @@
                         <td>
                             <div class="checkbox-inline">
                                 <label></label>
-                                <input type="checkbox" name="h_played" value={{k}}
+                                <input type="checkbox" name="a_played" value={{k}}
                                     {% if v['Played'] == 'Y' %}
                                         checked
                                     {% endif %}
@@ -111,7 +111,7 @@
             </div>
         </div>
     </div>
-        <p>{{ form.submit(class_="btn btn-primary") }}</p>
+    <p>{{ form.submit(class_="btn btn-primary") }}</p>
     </form>
 
 {% endblock %}
