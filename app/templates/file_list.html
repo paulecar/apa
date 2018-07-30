@@ -7,22 +7,26 @@
 
     <div class="table-responsive">
         <table title="Files" class="table table-striped table-condensed">
-            <th>File Set ID</th>
-            <th>Convert PDF</th>
-            <th>Scan Image File</th>
+            <th>File Name</th>
+            <th>PDF</th>
+            <th>Image File</th>
             <th>Scan Result</th>
             <th>Meta</th>
             {% for entry, files in files.items() %}
                 <tr>
                     <td>{{entry}}</td>
-                    <td><a title="Convert this file to image" href="{{ url_for('convert', filename=files['pdf']) }}">PDF</a></td>
-                    {% if 'png' in files.keys() %}
-                        <td><a title="Scan this file to text" href="{{ url_for('scanpng', filename=files['png']) }}">PNG</a></td>
+                    {% if 'pdf' in files.keys() %}
+                        <td><a title="Convert this file to image" href="{{ url_for('convert', filename=files['pdf']) }}">PDF</a></td>
                     {% else %}
-                        <td>No Image</td>
+                        <td>No PDF found</td>
+                    {% endif %}
+                    {% if 'png' in files.keys() %}
+                        <td><a title="Scan this image to text" href="{{ url_for('scanpng', filename=files['png']) }}">PNG</a></td>
+                    {% else %}
+                        <td>No Image found</td>
                     {% endif %}
                     {% if 'txt' in files.keys() %}
-                        <td><a title="Select this scan result" href="{{ url_for('loadtxt', filename=files['txt']) }}">Load Scan</a></td>
+                        <td><a title="Load this scan result" href="{{ url_for('loadtxt', filename=files['txt']) }}">Load Scan</a></td>
                     {% else %}
                         <td>No Scan Result</td>
                     {% endif %}
