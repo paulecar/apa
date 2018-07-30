@@ -202,7 +202,6 @@ def manage():
     form=Manage()
 
     # Load rosters from cookies
-
     ht = json.loads(request.cookies.get('home_roster'))
     at = json.loads(request.cookies.get('away_roster'))
     htn = request.cookies.get('home_name')
@@ -210,9 +209,14 @@ def manage():
 
     # POST action - apply check box status to cookies
     if request.method == 'POST':
-
         # Set absent flag and played flag in home roster
         for k, v in ht.items():
+            sl = request.form.getlist('h_sl_' + k)
+            if sl == ['3']:
+                ht[k]['SL'] = '3'
+            if sl == ['4']:
+                ht[k]['SL'] = '4'
+
             if k in request.form.getlist('h_absent'):
                 ht[k]['Absent'] = 'Y'
             else:
@@ -224,6 +228,12 @@ def manage():
 
         # Set absent flag and played flag in away roster
         for k, v in at.items():
+            sl = request.form.getlist('a_sl_' + k)
+            if sl == ['3']:
+                at[k]['SL'] = '3'
+            if sl == ['4']:
+                at[k]['SL'] = '4'
+
             if k in request.form.getlist('a_absent'):
                 at[k]['Absent'] = 'Y'
             else:

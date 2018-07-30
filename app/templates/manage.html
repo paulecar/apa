@@ -31,7 +31,19 @@
                             class="text-muted"
                         {% endif %} >
                         <td>{{k}}</td>
-                        <td>{{v['SL']}}</td>
+                        <td>
+                            {% if v['SL'] == '0' %}
+                                <div class="form-group form-group-sm">
+                                    <select class="select-picker form-control" name="h_sl_{{k}}">
+                                        <option>0</option>
+                                        <option>3</option>
+                                        <option>4</option>
+                                    </select>
+                                </div>
+                            {% else %}
+                                {{v['SL']}}
+                            {% endif %}
+                        </td>
                         <td>{{v['Name']}}</td>
                         <td>
                             <div class="checkbox-inline">
@@ -83,7 +95,19 @@
                             class="text-muted"
                         {% endif %} >
                         <td>{{k}}</td>
-                        <td>{{v['SL']}}</td>
+                        <td>
+                            {% if v['SL'] == '0' %}
+                                <div class="form-group form-group-sm">
+                                    <select class="select-picker form-control" name="a_sl_{{k}}">
+                                        <option>0</option>
+                                        <option>3</option>
+                                        <option>4</option>
+                                    </select>
+                                </div>
+                            {% else %}
+                                {{v['SL']}}
+                            {% endif %}
+                        </td>
                         <td>{{v['Name']}}</td>
                         <td>
                             <div class="checkbox-inline">
