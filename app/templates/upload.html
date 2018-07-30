@@ -5,11 +5,15 @@
 
       <form action = "{{ url_for('uploader') }}" method = "POST"
          enctype = "multipart/form-data">
+
+         <div class="well">Please upload PDF scoresheet</div>
+
+
          <input type = "file" name = "file" />
 
           <hr>
 
-         <input type = "submit"/>
+        <p>{{ form.submit(class_="btn btn-primary") }}</p>
       </form>
 
 {% endblock %}

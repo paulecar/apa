@@ -2,17 +2,16 @@
 
 {% block app_content %}
 
-    <h1 class="text-muted" align="center"> APA Utils<br></h1>
-    <h2  class="text-muted" align="center"> Manage Match Rosters</h2>
+    <h3  class="text-muted" align="center"> Manage Match Rosters</h3>
 
     <form action="" method="post">
     {{ form.hidden_tag() }}
 
         <div class="table-responsive">
 
-            <table title="Teams" class="table">
+            <table title="Teams" class="table table-condensed">
                 <tr>
-                    <th colspan="4" align="center">Home team: {{homename}} -
+                    <th colspan="5" align="center">Home team: {{homename}} -
                         <a title="Show available line ups" href="{{ url_for('lineups', roster='home')}}">available line ups </a>
                         [ {{ht_option_count}} ]
                     </th>
@@ -53,7 +52,7 @@
                     </tr>
                 {% endfor %}
                 <tr>
-                    <th colspan="4" align="center">Away team: {{awayname}} -
+                    <th colspan="5" align="center">Away team: {{awayname}} -
                         <a title="Show available line ups" href="{{ url_for('lineups', roster='away')}}">available line ups </a>
                         [ {{at_option_count}} ]
                     </th>
@@ -97,7 +96,7 @@
 
         </div>
 
-        <p>{{ form.submit() }}</p>
+        <p>{{ form.submit(class_="btn btn-primary") }}</p>
     </form>
 
 {% endblock %}

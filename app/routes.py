@@ -52,11 +52,9 @@ def index():
                                          awayname=awayTeamName,
                                          current_form = current_form))
 
-    if request.cookies.get('ID'):
-        flash('Cookie found:', request.cookies.get('ID'))
-    else:
+    if not request.cookies.get('ID'):
         # Create a cookie ID, which is used to create a separate folder on the server for documents
-        flash('Creating new session ID')
+        flash('Created new session ID')
         resp.set_cookie('ID', unique_id(), expires=expire_date)
 
     return resp
@@ -95,7 +93,7 @@ def uploader():
         os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], request.cookies.get('ID')), exist_ok=True)
         filename = secure_filename(f.filename)
         f.save(os.path.join(app.config['UPLOAD_FOLDER'], request.cookies.get('ID'), filename))
-        flash('file uploaded successfully')
+        flash('File uploaded successfully')
 
         # Start backgound conversion and scan process
         path=os.path.join(app.config['UPLOAD_FOLDER'], request.cookies.get('ID'))
@@ -128,9 +126,7 @@ def convert(filename):
     newname = filename.rsplit('.', 1)[0] + '.png'
     png_file = os.path.join(app.config['UPLOAD_FOLDER'], request.cookies.get('ID'), newname)
 
-    # print("Conv Start: ", time.strftime('%X %x %Z'))
     pdf2png(convert_file, "-r300", png_file)
-    # print("Conv End: ", time.strftime('%X %x %Z'))
 
     return redirect(url_for('files'))
 
@@ -139,9 +135,7 @@ def convert(filename):
 def scanpng(filename):
     scan_file = os.path.join(app.config['UPLOAD_FOLDER'], request.cookies.get('ID'), filename)
 
-    # print("Scan Start: ", time.strftime('%X %x %Z'))
     result = scantools.scan(filename, Image.open(scan_file))
-    # print("Scan End: ", time.strftime('%X %x %Z'))
 
     newname = os.path.join(app.config['UPLOAD_FOLDER'], request.cookies.get('ID'), filename.rsplit('.', 1)[0] + '.txt')
 
@@ -187,6 +181,8 @@ def loadtxt(filename):
     resp.set_cookie('away_roster', json.dumps(awayteam), expires=expire_date)
     resp.set_cookie('home_name', homeTeamName, expires=expire_date)
     resp.set_cookie('away_name', awayTeamName, expires=expire_date)
+
+    flash('Scan result loaded')
 
     return resp
 
