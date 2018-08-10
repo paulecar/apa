@@ -42,6 +42,8 @@ def async_scan(path, filename):
     with open(txt_file, 'w') as f:
         f.write(result)
 
+    # TODO Write metadata file (i.e. team names, etc)
+
 
 def build_combinations(roster):
     available_tonight = {}

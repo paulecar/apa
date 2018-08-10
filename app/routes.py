@@ -10,6 +10,7 @@ from collections import OrderedDict
 
 import os, scantools, json, time, datetime
 
+
 # Cookie expiration date
 expire_date = datetime.datetime.now()
 expire_date = expire_date + datetime.timedelta(days=90)
@@ -19,7 +20,7 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
-
+# TODO Add consitency to how I set and display the page title
 @app.route('/')
 @app.route('/index')
 def index():
